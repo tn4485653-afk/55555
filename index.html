@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Chat riêng tư</title>
+<style>
+body { font-family: Arial }
+#chat { height:300px; border:1px solid #ccc; overflow:auto; padding:5px }
+</style>
+</head>
+<body>
+
+<h3>Chat với Admin</h3>
+<div id="status">🔴 Admin offline</div>
+<div id="chat"></div>
+
+<input id="msg" placeholder="Nhập tin nhắn..." />
+<button onclick="send()">Gửi</button>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const socket = io();
+const userId = "guest_" + crypto.randomUUID();
+
+socket.emit("guest_join", userId);
+
+socket.on("admin_status", on =>
+  status.innerText = on ? "🟢 Admin online" : "🔴 Admin offline"
+);
+
+socket.on("history", msgs => msgs.forEach(show));
+
+function send() {
+  if (!msg.value) return;
+  socket.emit("guest_message", {
+    from: userId,
+    to: "admin",
+    content: msg.value
+  });
+  show({ from: "Me", content: msg.value });
+  msg.value = "";
+}
+
+socket.on("guest_receive", data => {
+  if (data.to === userId)
+    show({ from: "Admin", content: data.content });
+});
+
+function show(m) {
+  const d = document.createElement("div");
+  d.innerText = m.from + ": " + m.content;
+  chat.appendChild(d);
+}
+</script>
+
+</body>
+</html>
