@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Admin</title>
+<style>
+body { font-family: Arial }
+#chat { height:300px; border:1px solid #ccc; overflow:auto; padding:5px }
+</style>
+</head>
+<body>
+
+<h3>ADMIN PANEL</h3>
+
+<input id="pass" type="password" placeholder="Mật khẩu admin">
+<button onclick="login()">Login</button>
+
+<div id="chat"></div>
+
+<input id="msg" placeholder="Trả lời..." />
+<button onclick="send()">Gửi</button>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const socket = io();
+let currentUser = null;
+
+function login() {
+  socket.emit("admin_login", pass.value);
+}
+
+socket.on("admin_fail", () => alert("Sai mật khẩu"));
+
+socket.on("admin_receive", data => {
+  currentUser = data.from;
+  show({ from: data.from, content: data.content });
+});
+
+function send() {
+  if (!currentUser || !msg.value) return;
+  socket.emit("admin_reply", {
+    from: "admin",
+    to: currentUser,
+    content: msg.value
+  });
+  show({ from: "Me", content: msg.value });
+  msg.value = "";
+}
+
+function show(m) {
+  const d = document.createElement("div");
+  d.innerText = m.from + ": " + m.content;
+  chat.appendChild(d);
+}
+</script>
+
+</body>
+</html>
